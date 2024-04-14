@@ -71,6 +71,12 @@ dotenv.config();
     )
   );
 
+  // const payer = Keypair.generate();
+  // const mintAuthority = Keypair.generate();
+  // const mint = Keypair.generate();
+  // const transferFeeConfigAuthority = Keypair.generate();
+  // const withdrawWithheldAuthority = Keypair.generate();
+
   const extensions = [ExtensionType.TransferFeeConfig];
 
   const mintLen = getMintLen(extensions);
@@ -83,14 +89,14 @@ dotenv.config();
     "confirmed"
   );
 
-  // const airdropSignature = await connection.requestAirdrop(
-  //   payer.publicKey,
-  //   2 * LAMPORTS_PER_SOL
-  // );
-  // await connection.confirmTransaction({
-  //   signature: airdropSignature,
-  //   ...(await connection.getLatestBlockhash()),
-  // });
+  const airdropSignature = await connection.requestAirdrop(
+    payer.publicKey,
+    2 * LAMPORTS_PER_SOL
+  );
+  await connection.confirmTransaction({
+    signature: airdropSignature,
+    ...(await connection.getLatestBlockhash()),
+  });
 
   const mintLamports = await connection.getMinimumBalanceForRentExemption(
     mintLen
