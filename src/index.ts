@@ -16,6 +16,7 @@ import {
   getMintLen,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
+import dotenv from "dotenv";
 
 import {
   createInitializeTransferFeeConfigInstruction,
@@ -25,14 +26,50 @@ import {
   withdrawWithheldTokensFromMint,
 } from "@solana/spl-token";
 
-(async () => {
-  const payer = Keypair.generate();
+dotenv.config();
 
-  const mintAuthority = Keypair.generate();
-  const mintKeypair = Keypair.generate();
-  const mint = mintKeypair.publicKey;
-  const transferFeeConfigAuthority = Keypair.generate();
-  const withdrawWithheldAuthority = Keypair.generate();
+(async () => {
+  const PAYER_KEY: string | undefined = process.env.PAYER_KEY;
+  const MINT_AUTHORITY_KEY = process.env.MINT_AUTHORITY_KEY;
+  const MINT_KEY = process.env.MINT_KEY;
+  const TRANSFER_FEE_CONFIG_AUTHORITY_KEY =
+    process.env.TRANSFER_FEE_CONFIG_AUTHORITY_KEY;
+  const WITHDRAW_WITHHELD_AUTHORITY_KEY =
+    process.env.WITHDRAW_WITHHELD_AUTHORITY_KEY;
+
+  if (
+    !PAYER_KEY ||
+    !MINT_AUTHORITY_KEY ||
+    !MINT_KEY ||
+    !TRANSFER_FEE_CONFIG_AUTHORITY_KEY ||
+    !WITHDRAW_WITHHELD_AUTHORITY_KEY
+  ) {
+    console.log("Keys Not Found");
+    return;
+  }
+
+  const payer = Keypair.fromSecretKey(
+    new Uint8Array(Buffer.from(PAYER_KEY.toString(), "hex"))
+  );
+
+  const mintAuthority = Keypair.fromSecretKey(
+    new Uint8Array(Buffer.from(MINT_AUTHORITY_KEY.toString(), "hex"))
+  );
+
+  const mint = Keypair.fromSecretKey(
+    new Uint8Array(Buffer.from(MINT_KEY.toString(), "hex"))
+  );
+  const transferFeeConfigAuthority = Keypair.fromSecretKey(
+    new Uint8Array(
+      Buffer.from(TRANSFER_FEE_CONFIG_AUTHORITY_KEY.toString(), "hex")
+    )
+  );
+
+  const withdrawWithheldAuthority = Keypair.fromSecretKey(
+    new Uint8Array(
+      Buffer.from(WITHDRAW_WITHHELD_AUTHORITY_KEY.toString(), "hex")
+    )
+  );
 
   const extensions = [ExtensionType.TransferFeeConfig];
 
@@ -46,14 +83,14 @@ import {
     "confirmed"
   );
 
-  const airdropSignature = await connection.requestAirdrop(
-    payer.publicKey,
-    2 * LAMPORTS_PER_SOL
-  );
-  const air = await connection.confirmTransaction({
-    signature: airdropSignature,
-    ...(await connection.getLatestBlockhash()),
-  });
+  // const airdropSignature = await connection.requestAirdrop(
+  //   payer.publicKey,
+  //   2 * LAMPORTS_PER_SOL
+  // );
+  // await connection.confirmTransaction({
+  //   signature: airdropSignature,
+  //   ...(await connection.getLatestBlockhash()),
+  // });
 
   const mintLamports = await connection.getMinimumBalanceForRentExemption(
     mintLen
@@ -61,13 +98,13 @@ import {
   const mintTransaction = new Transaction().add(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
-      newAccountPubkey: mint,
+      newAccountPubkey: mint.publicKey,
       space: mintLen,
       lamports: mintLamports,
       programId: TOKEN_2022_PROGRAM_ID,
     }),
     createInitializeTransferFeeConfigInstruction(
-      mint,
+      mint.publicKey,
       transferFeeConfigAuthority.publicKey,
       withdrawWithheldAuthority.publicKey,
       feeBasisPoints,
@@ -75,7 +112,7 @@ import {
       TOKEN_2022_PROGRAM_ID
     ),
     createInitializeMintInstruction(
-      mint,
+      mint.publicKey,
       decimals,
       mintAuthority.publicKey,
       null,
@@ -85,7 +122,7 @@ import {
   const tx = await sendAndConfirmTransaction(
     connection,
     mintTransaction,
-    [payer, mintKeypair],
+    [payer, mint],
     undefined
   );
 
