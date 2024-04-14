@@ -61,10 +61,10 @@ dotenv.config();
     2 * LAMPORTS_PER_SOL
   );
 
-  const mintAirdrop = await connection.requestAirdrop(
-    mint.publicKey,
-    2 * LAMPORTS_PER_SOL
-  );
+  // const mintAirdrop = await connection.requestAirdrop(
+  //   mint.publicKey,
+  //   2 * LAMPORTS_PER_SOL
+  // );
 
   const transferFeeConfigAuthorityAirdrop = await connection.requestAirdrop(
     transferFeeConfigAuthority.publicKey,
@@ -86,10 +86,10 @@ dotenv.config();
     ...(await connection.getLatestBlockhash()),
   });
 
-  await connection.confirmTransaction({
-    signature: mintAirdrop,
-    ...(await connection.getLatestBlockhash()),
-  });
+  // await connection.confirmTransaction({
+  //   signature: mintAirdrop,
+  //   ...(await connection.getLatestBlockhash()),
+  // });
 
   await connection.confirmTransaction({
     signature: transferFeeConfigAuthorityAirdrop,
